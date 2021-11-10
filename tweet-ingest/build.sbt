@@ -6,4 +6,4 @@ version := "0.1"
 
 scalaVersion := "2.13.6"
 
-libraryDependencies ++= elastic4s ++ twitter4s
+libraryDependencies ++= elastic4s ++ twitter4s ++ slf4s

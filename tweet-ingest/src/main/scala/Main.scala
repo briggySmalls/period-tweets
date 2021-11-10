@@ -1,6 +1,8 @@
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Sink
+import clients.ElasticClient
 import com.danielasfregola.twitter4s.entities.enums.Language
+import models.IndexibleTweet
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -12,8 +14,14 @@ object Main extends App {
     languages = Seq(Language.English)
   )
 
-  source
+
+
+  val indexName = "tweets"
+  val es = new ElasticClient(Set("http://localhost:9200"))
+  es.createTweetIndex(indexName).map(o => {
+    source
     .log("debug", t => println(t.text))
-    .to(Sink.ignore)
+    .to(Sink.foreach(t => es.indexTweet(indexName, IndexibleTweet.fromTweet(t))))
     .run()
+  })
 }

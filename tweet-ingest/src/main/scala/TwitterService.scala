@@ -4,14 +4,14 @@ import akka.stream.scaladsl.{Keep, Sink, Source, SourceQueue}
 import com.danielasfregola.twitter4s.TwitterStreamingClient
 import com.danielasfregola.twitter4s.entities.Tweet
 import com.danielasfregola.twitter4s.entities.enums.Language.Language
+import com.sksamuel.exts.Logging
 import com.sun.org.slf4j.internal.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 
-class TwitterService {
+class TwitterService extends Logging {
   private val client = TwitterStreamingClient()
   private val bufferSize = 100
-  private val logger = LoggerFactory.getLogger(classOf[TwitterService])
 
   def source(tracks: Seq[String], languages: Seq[Language])
             (implicit materializer: Materializer, ec: ExecutionContext): Source[Tweet, NotUsed] = {

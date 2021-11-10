@@ -16,10 +16,17 @@ object Dependencies {
     "com.typesafe.akka" %% "akka-stream" % Versions.akka,
     "com.typesafe.akka" %% "akka-testkit" % Versions.akka % Test,
   )
+
+  val slf4s = Seq(
+    "org.slf4s" %% "slf4s-api" % Versions.slf4s,
+    "ch.qos.logback" % "logback-classic" % Versions.logback
+  )
 }
 
 object Versions {
   val elastic4s = "7.15.1"
   val twitter4s = "7.0"
   val akka = "2.6.16"
+  val slf4s = "1.7.12"
+  val logback = "1.1.2"
 }
