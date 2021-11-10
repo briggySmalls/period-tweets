@@ -1,24 +1,19 @@
-import com.danielasfregola.twitter4s.TwitterStreamingClient
-import com.danielasfregola.twitter4s.entities.Tweet
+import akka.actor.ActorSystem
+import akka.stream.scaladsl.Sink
 import com.danielasfregola.twitter4s.entities.enums.Language
-import com.danielasfregola.twitter4s.entities.streaming.StreamingMessage
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends App {
-  val client = TwitterStreamingClient()
+  implicit val system = ActorSystem("tweet-ingest")
 
-  def printTweetText: PartialFunction[StreamingMessage, Unit] = {
-    case tweet: Tweet => println(tweet.text)
-  }
+  val source = new TwitterService().source(
+    tracks = Seq("period", "menstruation", "menstruating"),
+    languages = Seq(Language.English)
+  )
 
-  val streamF = client.filterStatuses(
-    tracks = Seq("period pants", "period knickers", "period underwear", "sanitary shorts", "period panties", "menstruation"),
-    languages = Seq(Language.English),
-    stall_warnings = true,
-  )({
-    case tweet: Tweet => println(tweet.text)
-  },
-  {
-    case e: Throwable => println(e)
-  })
-//  client.sampleStatuses(stall_warnings = true)(printTweetText)
+  source
+    .log("debug", t => println(t.text))
+    .to(Sink.ignore)
+    .run()
 }
