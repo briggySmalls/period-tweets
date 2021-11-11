@@ -5,7 +5,7 @@ import com.danielasfregola.twitter4s.entities.Tweet
 import java.time.Instant
 
 case class IndexibleTweet(
-  val id: Long,
+  val id: String,
   val text: String,
   val created: Instant,
   val retweet_count: Long,
@@ -21,7 +21,7 @@ case class IndexibleTweet(
 object IndexibleTweet {
   def fromTweet(t: Tweet) =
     IndexibleTweet(
-      id = t.id,
+      id = t.id_str,
       text = t.text,
       created = t.created_at,
       retweet_count = t.retweet_count,
