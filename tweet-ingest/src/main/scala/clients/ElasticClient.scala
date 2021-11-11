@@ -1,6 +1,7 @@
 package clients
 
 import com.sksamuel.elastic4s.http.JavaClient
+import com.sksamuel.elastic4s.requests.script.Script
 import com.sksamuel.elastic4s.{ElasticClient, ElasticProperties, RequestFailure, RequestSuccess, Response}
 import com.sksamuel.exts.Logging
 import com.sun.org.slf4j.internal.LoggerFactory
@@ -22,7 +23,17 @@ class ElasticClient(val hosts: Set[String])(implicit ec: ExecutionContext) exten
 
   def indexTweet(index: String, tweet: IndexibleTweet): Future[Either[String, Any]] = {
     client.execute {
-      indexInto(index).id(tweet.id.toString).fields(tweet.toMap() - "id")
+      indexInto(index).id(tweet.id).fields(tweet.toMap() - "id")
+    }.map(handleResponse)
+  }
+
+  def incrementRetweets(index: String, id: String, count: Long): Future[Either[String, Any]] = {
+    client.execute {
+      updateById(index, id).script(
+        Script(
+          "ctx._source.retweet_count += params.count"
+        ).params(Map("count" -> count))
+      )
     }.map(handleResponse)
   }
 

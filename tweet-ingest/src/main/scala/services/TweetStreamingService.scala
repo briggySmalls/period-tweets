@@ -1,20 +1,24 @@
+package services
+
 import akka.NotUsed
+import akka.stream.scaladsl.Source
 import akka.stream.{Materializer, OverflowStrategy, QueueOfferResult}
-import akka.stream.scaladsl.{Keep, Sink, Source, SourceQueue}
 import com.danielasfregola.twitter4s.TwitterStreamingClient
 import com.danielasfregola.twitter4s.entities.Tweet
 import com.danielasfregola.twitter4s.entities.enums.Language.Language
 import com.sksamuel.exts.Logging
-import com.sun.org.slf4j.internal.LoggerFactory
+import config.TweetStreamingServiceConfig
 
 import scala.concurrent.ExecutionContext
+import scala.util.chaining.scalaUtilChainingOps
 
-class TwitterService extends Logging {
+class TweetStreamingService(settings: TweetStreamingServiceConfig) extends Logging {
   private val client = TwitterStreamingClient()
   private val bufferSize = 100
 
-  def source(tracks: Seq[String], languages: Seq[Language])
+  def source()
             (implicit materializer: Materializer, ec: ExecutionContext): Source[Tweet, NotUsed] = {
+
     // Create a source that we can enqueue to dynamically
     val (queue, source) = Source
       .queue[Tweet](bufferSize, OverflowStrategy.dropHead)
@@ -22,8 +26,8 @@ class TwitterService extends Logging {
 
     // Enqueue tweets into the source via the queue
     client.filterStatuses(
-        tracks = tracks,
-        languages = languages,
+        tracks = settings.tracks,
+        languages = settings.languages,
         stall_warnings = true,
       )({
         case tweet: Tweet => queue.offer(tweet).map {
@@ -35,5 +39,12 @@ class TwitterService extends Logging {
       })
 
     source
+      .filter(matchesExactly)
+  }
+
+  private def matchesExactly(tweet: Tweet): Boolean = {
+    settings.exactMatches
+      .exists(tweet.text.contains)
+      .tap(b => if (!b) logger.debug(s"Tweet ${tweet.id_str} filtered:\n${tweet.text}"))
   }
 }
